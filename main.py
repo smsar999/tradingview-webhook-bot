@@ -4,8 +4,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# الحد الأقصى للأحجام حسب الرموز
-MAX_LOT_SIZES = {MAX_LOT_SIZES = {
+# الحد الأقصى للأحجام حسب الرموز (حسب شروط المسابقة)
+MAX_LOT_SIZES = {
     "XAUUSD": 5,
     "NAS100": 30,
     "SPX500": 30,
@@ -24,7 +24,6 @@ MAX_LOT_SIZES = {MAX_LOT_SIZES = {
     "USOUSD": 50,
     "UKOUSD": 50
 }
-
 
 @app.route('/', methods=['POST'])
 def webhook():
