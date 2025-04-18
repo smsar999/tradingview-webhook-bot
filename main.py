@@ -1,65 +1,48 @@
 # -*- coding: utf-8 -*-
-import requests
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Request
+import uvicorn
 
-app = Flask(__name__)
+app = FastAPI()
 
-# الحد الأقصى للأحجام حسب الرموز (حسب شروط المسابقة)
-MAX_LOT_SIZES = {
-    "XAUUSD": 5,
-    "NAS100": 30,
-    "SPX500": 30,
-    "DE40": 10,
-    "GER40": 10,
-    "US30": 30,
-    "BTCUSD": 1,
-    "ETHUSD": 10,
-    "USDJPY": 100,
-    "EURUSD": 100,
-    "GBPUSD": 100,
-    "AUDUSD": 100,
-    "NZDUSD": 100,
-    "USDCHF": 100,
-    "USDCAD": 100,
-    "USOUSD": 50,
-    "UKOUSD": 50
+# قاموس الكميات القصوى لكل رمز (مطابق لما في استراتيجيتك)
+max_quantities = {
+    "XAUUSD": 160.0,
+    "NAS100": 24.0,
+    "EURUSD": 460000.0,
+    "USDJPY": 500000.0,
+    "US30": 11.0,
+    "GBPUSD": 385000.0,
+    "GER40": 20.0,
+    "AUDUSD": 790000.0,
+    "BTCUSD": 5.0,
+    "HK50": 150.0,
+    "SPOTCRUDE": 7000.0,
+    "ETHUSD": 180.0,
+    "SOLUSD": 2450.0
 }
 
-@app.route('/', methods=['POST'])
-def webhook():
-    data = request.json
-    print("🚀 Webhook received:", data)
+@app.post("/")
+async def webhook(request: Request):
+    data = await request.json()  # استقبال بيانات JSON من TradingView
+    action = data.get("action")  # استخراج نوع الأمر (buy, sell, إلخ)
+    symbol = data.get("symbol")  # استخراج رمز الأداة (مثل XAUUSD)
+    price = data.get("price")    # استخراج السعر
+    # استخدام الكمية من القاموس بناءً على الرمز
+    quantity = max_quantities.get(symbol, 0.0)
 
-    action = data.get('action')
-    symbol = data.get('symbol')
-    quantity = float(data.get('quantity', 0))
-    price = float(data.get('price', 0))
-
-    # التحقق من الرمز والحجم
-    max_size = MAX_LOT_SIZES.get(symbol)
-    if not max_size:
-        return jsonify({"status": "error", "message": f"رمز غير مدعوم: {symbol}"}), 400
-    if quantity > max_size:
-        return jsonify({"status": "error", "message": f"الحجم {quantity} أكبر من الحد الأقصى {max_size} للرمز {symbol}"}), 400
-
-    if action in ['buy', 'sell']:
-        simulate_trade(action, symbol, quantity, price)
-        return jsonify({"status": "success"}), 200
+    # تنفيذ الأوامر بناءً على نوع التنبيه
+    if action == "buy":
+        print(f"تنفيذ أمر شراء: {quantity} من {symbol} بسعر {price}")
+    elif action == "sell":
+        print(f"تنفيذ أمر بيع: {quantity} من {symbol} بسعر {price}")
+    elif action == "close_long":
+        print(f"إغلاق صفقة طويلة لـ {symbol} بسعر {price}")
+    elif action == "close_short":
+        print(f"إغلاق صفقة قصيرة لـ {symbol} بسعر {price}")
     else:
-        return jsonify({"status": "error", "message": "إجراء غير معروف"}), 400
+        print(f"نوع أمر غير معروف: {action}")
 
-def simulate_trade(action, symbol, quantity, price):
-    print(f"\n✅ تنفيذ {action.upper()} لـ {symbol}")
-    print(f"📦 الحجم: {quantity}")
-    print(f"💰 السعر: {price}")
-    print(f"⛔ وقف الخسارة: {calculate_stop_loss(price, action)}")
-    print(f"🎯 الهدف: {calculate_take_profit(price, action)}")
+    return {"status": "success", "data": data}
 
-def calculate_stop_loss(price, order_type):
-    return round(price * 0.99, 2) if order_type == 'buy' else round(price * 1.01, 2)
-
-def calculate_take_profit(price, order_type):
-    return round(price * 1.02, 2) if order_type == 'buy' else round(price * 0.98, 2)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
