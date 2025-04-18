@@ -23,13 +23,13 @@ max_quantities = {
 }
 
 # إعدادات Telegram
-bot_token = '8016216466:AAHZ01LhPYGOWEu6ccnuybbBJegpykZ95kg'  # رمز البوت
-chat_id = '335243214'  # معرف الدردشة
+TELEGRAM_BOT_TOKEN = "your_bot_token"  # استبدل بالـ Token من @BotFather
+TELEGRAM_CHAT_ID = "your_chat_id"  # استبدل بالـ Chat ID بتاعك
 
 def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": chat_id,
+        "chat_id": TELEGRAM_CHAT_ID,
         "text": message
     }
     try:
