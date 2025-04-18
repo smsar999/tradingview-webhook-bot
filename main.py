@@ -4,7 +4,7 @@ import uvicorn
 
 app = FastAPI()
 
-# قاموس الكميات القصوى لكل رمز (مطابق لما في استراتيجيتك)
+# قاموس الكميات القصوى لكل رمز
 max_quantities = {
     "XAUUSD": 160.0,
     "NAS100": 24.0,
@@ -21,9 +21,13 @@ max_quantities = {
     "SOLUSD": 2450.0
 }
 
-# مسار رئيسي لاختبار الخادم
+# مسار رئيسي لاختبار الخادم (لطلبات GET وHEAD)
 @app.get("/")
 async def root():
+    return {"message": "Webhook bot is running!"}
+
+@app.head("/")
+async def head_root():
     return {"message": "Webhook bot is running!"}
 
 # مسار Webhook لاستقبال التنبيهات من TradingView
