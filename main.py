@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from fastapi import FastAPI, Request
 import uvicorn
+import requests
 
 app = FastAPI()
 
@@ -21,7 +22,26 @@ max_quantities = {
     "SOLUSD": 2450.0
 }
 
-# مسار رئيسي لاختبار الخادم (لطلبات GET وHEAD)
+# إعدادات Telegram
+bot_token = '8016216466:AAHZ01LhPYGOWEu6ccnuybbBJegpykZ95kg'  # رمز البوت
+chat_id = '335243214'  # معرف الدردشة
+
+def send_telegram_message(message):
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print(f"تم إرسال رسالة إلى Telegram: {message}")
+        else:
+            print(f"خطأ في إرسال الرسالة إلى Telegram: {response.text}")
+    except Exception as e:
+        print(f"خطأ في إرسال الرسالة إلى Telegram: {e}")
+
+# مسار رئيسي لاختبار الخادم
 @app.get("/")
 async def root():
     return {"message": "Webhook bot is running!"}
@@ -37,20 +57,25 @@ async def webhook(request: Request):
     action = data.get("action")  # استخراج نوع الأمر (buy, sell, إلخ)
     symbol = data.get("symbol")  # استخراج رمز الأداة (مثل XAUUSD)
     price = data.get("price")    # استخراج السعر
-    # استخدام الكمية من القاموس بناءً على الرمز
-    quantity = max_quantities.get(symbol, 0.0)
+    quantity = max_quantities.get(symbol, 0.0)  # استخراج الكمية
 
-    # تنفيذ الأوامر بناءً على نوع التنبيه
+    # إعداد رسالة الأمر
     if action == "buy":
-        print(f"تنفيذ أمر شراء: {quantity} من {symbol} بسعر {price}")
+        message = f"تنفيذ أمر شراء: {quantity} من {symbol} بسعر {price}"
     elif action == "sell":
-        print(f"تنفيذ أمر بيع: {quantity} من {symbol} بسعر {price}")
+        message = f"تنفيذ أمر بيع: {quantity} من {symbol} بسعر {price}"
     elif action == "close_long":
-        print(f"إغلاق صفقة طويلة لـ {symbol} بسعر {price}")
+        message = f"إغلاق صفقة طويلة لـ {symbol} بسعر {price}"
     elif action == "close_short":
-        print(f"إغلاق صفقة قصيرة لـ {symbol} بسعر {price}")
+        message = f"إغلاق صفقة قصيرة لـ {symbol} بسعر {price}"
     else:
-        print(f"نوع أمر غير معروف: {action}")
+        message = f"نوع أمر غير معروف: {action}"
+
+    # طباعة الأمر في السجلات
+    print(message)
+
+    # إرسال الأمر إلى Telegram
+    send_telegram_message(message)
 
     return {"status": "success", "data": data}
 
