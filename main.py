@@ -21,7 +21,13 @@ max_quantities = {
     "SOLUSD": 2450.0
 }
 
-@app.post("/")
+# مسار رئيسي لاختبار الخادم
+@app.get("/")
+async def root():
+    return {"message": "Webhook bot is running!"}
+
+# مسار Webhook لاستقبال التنبيهات من TradingView
+@app.post("/webhook")
 async def webhook(request: Request):
     data = await request.json()  # استقبال بيانات JSON من TradingView
     action = data.get("action")  # استخراج نوع الأمر (buy, sell, إلخ)
